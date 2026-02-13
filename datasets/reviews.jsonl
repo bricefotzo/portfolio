@@ -1,0 +1,21 @@
+{"city_id": 1, "author": "Marie D.", "rating": 4, "comment": "Paris est magique pour la culture mais le coût de la vie est élevé.", "tags": ["culture", "logement"], "created_at": "2024-09-15T10:30:00"}
+{"city_id": 1, "author": "Pierre L.", "rating": 3, "comment": "Transports excellents mais trop de bruit et de pollution.", "tags": ["transport", "environnement"], "created_at": "2024-08-20T14:15:00"}
+{"city_id": 2, "author": "Sophie M.", "rating": 5, "comment": "Lyon est parfaite : gastronomie, culture et qualité de vie au top.", "tags": ["culture", "gastronomie", "qualité de vie"], "created_at": "2024-10-01T09:00:00"}
+{"city_id": 2, "author": "Thomas R.", "rating": 4, "comment": "Belle ville avec un bon réseau de transports, quartiers agréables.", "tags": ["transport", "cadre de vie"], "created_at": "2024-07-12T16:45:00"}
+{"city_id": 3, "author": "Julien B.", "rating": 3, "comment": "Marseille a du caractère mais la sécurité reste un point faible.", "tags": ["sécurité", "culture"], "created_at": "2024-06-30T11:20:00"}
+{"city_id": 3, "author": "Camille F.", "rating": 4, "comment": "Le climat et la mer compensent les défauts. Ville attachante.", "tags": ["environnement", "climat"], "created_at": "2024-09-05T08:30:00"}
+{"city_id": 4, "author": "Lucas G.", "rating": 5, "comment": "Toulouse allie dynamisme économique et douceur de vivre.", "tags": ["emploi", "qualité de vie"], "created_at": "2024-10-10T13:00:00"}
+{"city_id": 5, "author": "Emma V.", "rating": 5, "comment": "Bordeaux est sublime, le centre historique est magnifique.", "tags": ["patrimoine", "culture", "vin"], "created_at": "2024-08-15T10:00:00"}
+{"city_id": 5, "author": "Antoine P.", "rating": 4, "comment": "Très bonne qualité de vie mais les prix immobiliers montent.", "tags": ["logement", "qualité de vie"], "created_at": "2024-07-20T15:30:00"}
+{"city_id": 6, "author": "Léa C.", "rating": 5, "comment": "Nantes est innovante et verte. Meilleure ville pour les familles.", "tags": ["environnement", "famille", "innovation"], "created_at": "2024-09-25T09:45:00"}
+{"city_id": 6, "author": "Hugo N.", "rating": 4, "comment": "Ville à taille humaine avec une super scène culturelle.", "tags": ["culture", "cadre de vie"], "created_at": "2024-06-10T17:00:00"}
+{"city_id": 7, "author": "Clara W.", "rating": 4, "comment": "Strasbourg est charmante, le marché de Noël est incontournable.", "tags": ["culture", "patrimoine"], "created_at": "2024-12-05T11:00:00"}
+{"city_id": 8, "author": "Nathan S.", "rating": 4, "comment": "Montpellier est jeune et ensoleillée. Ambiance méditerranéenne.", "tags": ["climat", "jeunesse", "éducation"], "created_at": "2024-10-20T14:30:00"}
+{"city_id": 9, "author": "Manon T.", "rating": 5, "comment": "Rennes est une pépite : verte, dynamique et accueillante.", "tags": ["environnement", "emploi", "numérique"], "created_at": "2024-09-08T10:15:00"}
+{"city_id": 10, "author": "Maxime H.", "rating": 3, "comment": "Lille a une vie nocturne incroyable mais le temps est gris.", "tags": ["culture", "climat"], "created_at": "2024-11-01T20:00:00"}
+{"city_id": 11, "author": "Inès A.", "rating": 4, "comment": "Grenoble offre la montagne à portée de main. Cadre unique.", "tags": ["montagne", "sport", "environnement"], "created_at": "2024-08-25T07:30:00"}
+{"city_id": 12, "author": "Paul D.", "rating": 5, "comment": "Angers est la ville où il fait le mieux vivre en France. Tout est calme et agréable.", "tags": ["qualité de vie", "calme", "famille"], "created_at": "2024-10-15T09:00:00"}
+{"city_id": 13, "author": "Julie K.", "rating": 4, "comment": "Dijon est une belle surprise : patrimoine, gastronomie et accessibilité.", "tags": ["gastronomie", "patrimoine", "transport"], "created_at": "2024-07-05T12:00:00"}
+{"city_id": 16, "author": "Sarah B.", "rating": 4, "comment": "Tours est idéale pour les amoureux d'histoire et de nature.", "tags": ["patrimoine", "nature", "qualité de vie"], "created_at": "2024-09-12T16:00:00"}
+{"city_id": 18, "author": "Romain J.", "rating": 5, "comment": "La Rochelle est un bijou. Ville propre, maritime et écologique.", "tags": ["environnement", "mer", "écologie"], "created_at": "2024-08-01T11:30:00"}
+{"city_id": 20, "author": "Anaïs M.", "rating": 5, "comment": "Vannes et le Golfe du Morbihan : un cadre de vie exceptionnel.", "tags": ["nature", "mer", "calme"], "created_at": "2024-10-05T08:00:00"}
