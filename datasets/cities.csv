@@ -1,0 +1,21 @@
+id,name,department,region,population,description,latitude,longitude,overall_score
+1,Paris,Paris,Île-de-France,2161000,"Capitale de la France, centre culturel et économique mondial.",48.8566,2.3522,6.8
+2,Lyon,Rhône,Auvergne-Rhône-Alpes,516092,"Métropole dynamique, capitale de la gastronomie française.",45.7640,4.8357,7.5
+3,Marseille,Bouches-du-Rhône,Provence-Alpes-Côte d'Azur,870731,"Deuxième ville de France, port méditerranéen majeur.",43.2965,5.3698,5.9
+4,Toulouse,Haute-Garonne,Occitanie,493465,"Ville rose, capitale européenne de l'aéronautique.",43.6047,1.4442,7.2
+5,Bordeaux,Gironde,Nouvelle-Aquitaine,257068,"Métropole viticole au patrimoine UNESCO.",44.8378,-0.5792,7.8
+6,Nantes,Loire-Atlantique,Pays de la Loire,314138,"Cité des Ducs, ville verte et innovante.",47.2184,-1.5536,7.9
+7,Strasbourg,Bas-Rhin,Grand Est,284677,"Capitale européenne, au carrefour de la France et l'Allemagne.",48.5734,7.7521,7.3
+8,Montpellier,Hérault,Occitanie,290053,"Ville universitaire méditerranéenne en plein essor.",43.6108,3.8767,7.0
+9,Rennes,Ille-et-Vilaine,Bretagne,216815,"Capitale bretonne, pôle numérique et universitaire.",48.1173,-1.6778,7.6
+10,Lille,Nord,Hauts-de-France,232787,"Métropole transfrontalière, riche en patrimoine culturel.",50.6292,3.0573,6.7
+11,Grenoble,Isère,Auvergne-Rhône-Alpes,158198,"Capitale des Alpes, ville d'innovation et de montagne.",45.1885,5.7245,7.1
+12,Angers,Maine-et-Loire,Pays de la Loire,155850,"Ville douce à vivre, au cœur du Val de Loire.",47.4784,-0.5632,8.0
+13,Dijon,Côte-d'Or,Bourgogne-Franche-Comté,159346,"Capitale de la Bourgogne, patrimoine gastronomique.",47.3220,5.0415,7.4
+14,Clermont-Ferrand,Puy-de-Dôme,Auvergne-Rhône-Alpes,147865,"Au pied des volcans d'Auvergne, ville Michelin.",45.7772,3.0870,7.0
+15,Brest,Finistère,Bretagne,139163,"Ville océane, port atlantique et base navale.",48.3904,-4.4861,6.8
+16,Tours,Indre-et-Loire,Centre-Val de Loire,136565,"Cité des châteaux de la Loire, art de vivre.",47.3941,0.6848,7.5
+17,Aix-en-Provence,Bouches-du-Rhône,Provence-Alpes-Côte d'Azur,145133,"Ville d'art provençale, cité de Cézanne.",43.5297,5.4474,7.3
+18,La Rochelle,Charente-Maritime,Nouvelle-Aquitaine,77196,"Ville maritime historique, cité verte et touristique.",46.1603,-1.1511,8.1
+19,Bayonne,Pyrénées-Atlantiques,Nouvelle-Aquitaine,52006,"Capitale du Pays basque français, culture et gastronomie.",43.4929,-1.4748,7.7
+20,Vannes,Morbihan,Bretagne,54020,"Cité médiévale bretonne au bord du Golfe du Morbihan.",47.6586,-2.7599,7.8
