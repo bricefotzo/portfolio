@@ -41,10 +41,10 @@ else:
 # ── Navigation ─────────────────────────────────────────────────
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Navigation")
-st.sidebar.page_link("frontend/app.py", label="Accueil", icon="🏠")
-st.sidebar.page_link("frontend/pages/1_Search.py", label="Explorer les villes", icon="🔍")
-st.sidebar.page_link("frontend/pages/2_City_Details.py", label="Détails ville", icon="📊")
-st.sidebar.page_link("frontend/pages/3_Recommendations.py", label="Recommandations", icon="🤝")
+# st.sidebar.page_link("frontend/app.py", label="Accueil", icon="🏠")
+# st.sidebar.page_link("packages/frontend/src/frontend/pages/1_Search.py", label="Explorer les villes", icon="🔍")
+# st.sidebar.page_link("frontend/pages/2_City_Details.py", label="Détails ville", icon="📊")
+# st.sidebar.page_link("frontend/pages/3_Recommendations.py", label="Recommandations", icon="🤝")
 
 # ── Contenu accueil ────────────────────────────────────────────
 st.markdown("---")

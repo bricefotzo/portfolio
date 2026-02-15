@@ -75,11 +75,11 @@ if selected_label:
     with col1:
         if st.button("📊 Voir les détails", use_container_width=True):
             select_city(selected["id"], selected["name"])
-            st.switch_page("frontend/pages/2_City_Details.py")
+            st.switch_page("pages/2_City_Details.py")
     with col2:
         if st.button("🤝 Recommandations", use_container_width=True):
             select_city(selected["id"], selected["name"])
-            st.switch_page("frontend/pages/3_Recommendations.py")
+            st.switch_page("pages/3_Recommendations.py")
 
 # ── Pagination ─────────────────────────────────────────────────
 total_pages = max(1, (total + page_size - 1) // page_size)

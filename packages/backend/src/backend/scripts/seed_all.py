@@ -14,7 +14,14 @@ from __future__ import annotations
 import asyncio
 import csv
 import json
+from datetime import datetime, timezone
 from pathlib import Path
+
+from sqlalchemy import text
+
+from backend.db.mongo import get_mongo_db
+from backend.db.postgres import get_session_factory
+from backend.db.neo4j import get_neo4j_driver
 
 DATASETS_DIR = Path(__file__).resolve().parents[5] / "datasets"
 
@@ -22,21 +29,177 @@ DATASETS_DIR = Path(__file__).resolve().parents[5] / "datasets"
 async def seed_postgres():
     """Charge cities.csv et scores.csv dans PostgreSQL."""
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'cities.csv'}")
-    # TODO: Implémenter
-    print("[seed] PostgreSQL — À implémenter")
+    # ✂️ SOLUTION START
+    factory = get_session_factory()
+    async with factory() as session:
+        # Créer les tables si nécessaire
+        await session.execute(text("""
+            CREATE TABLE IF NOT EXISTS cities (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                department TEXT,
+                region TEXT,
+                population INTEGER DEFAULT 0,
+                description TEXT,
+                latitude DOUBLE PRECISION,
+                longitude DOUBLE PRECISION,
+                overall_score DOUBLE PRECISION DEFAULT 0
+            )
+        """))
+        await session.execute(text("""
+            CREATE TABLE IF NOT EXISTS scores (
+                city_id INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                label TEXT,
+                score DOUBLE PRECISION NOT NULL
+            )
+        """))
+        await session.commit()
+
+        # Vidage puis chargement cities
+        await session.execute(text("DELETE FROM scores"))
+        await session.execute(text("DELETE FROM cities"))
+        await session.commit()
+
+        cities_path = DATASETS_DIR / "cities.csv"
+        with open(cities_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                lat = row.get("latitude")
+                lon = row.get("longitude")
+                osc = row.get("overall_score")
+                await session.execute(
+                    text("""
+                        INSERT INTO cities (id, name, department, region, population, description, latitude, longitude, overall_score)
+                        VALUES (:id, :name, :department, :region, :population, :description, :latitude, :longitude, :overall_score)
+                    """),
+                    {
+                        "id": int(row["id"]),
+                        "name": row["name"],
+                        "department": row["department"],
+                        "region": row["region"],
+                        "population": int(row["population"]),
+                        "description": row.get("description") or "",
+                        "latitude": float(lat) if lat else None,
+                        "longitude": float(lon) if lon else None,
+                        "overall_score": float(osc) if osc else 0.0,
+                    },
+                )
+        await session.commit()
+
+        scores_path = DATASETS_DIR / "scores.csv"
+        with open(scores_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                await session.execute(
+                    text("""
+                        INSERT INTO scores (city_id, category, label, score)
+                        VALUES (:city_id, :category, :label, :score)
+                    """),
+                    {
+                        "city_id": int(row["city_id"]),
+                        "category": row["category"],
+                        "label": row.get("label") or "",
+                        "score": float(row["score"]),
+                    },
+                )
+        await session.commit()
+    print("[seed] PostgreSQL — OK")
+    # ✂️ SOLUTION END
 
 
 async def seed_mongo():
     """Charge reviews.jsonl dans MongoDB."""
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'reviews.jsonl'}")
-    # TODO: Implémenter
-    print("[seed] MongoDB — À implémenter")
+    # ✂️ SOLUTION START
+    db = get_mongo_db()
+    collection = db["reviews"]
+    await collection.delete_many({})
+
+    reviews_path = DATASETS_DIR / "reviews.jsonl"
+    with open(reviews_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            doc = json.loads(line)
+            if isinstance(doc.get("created_at"), str):
+                doc["created_at"] = datetime.fromisoformat(doc["created_at"].replace("Z", "+00:00"))
+            elif doc.get("created_at") is None:
+                doc["created_at"] = datetime.now(timezone.utc)
+            await collection.insert_one(doc)
+    print("[seed] MongoDB — OK")
+    # ✂️ SOLUTION END
 
 
 async def seed_neo4j():
     """Crée le graphe de villes, critères et relations dans Neo4j."""
-    # TODO: Implémenter
-    print("[seed] Neo4j — À implémenter")
+    # ✂️ SOLUTION START
+    driver = get_neo4j_driver()
+
+    async with driver.session() as session:
+        # Nettoyer le graphe (optionnel : supprimer nos nœuds)
+        await session.run("MATCH (n) DETACH DELETE n")
+
+        # 1) Créer les nœuds Criterion à partir des catégories distinctes des scores
+        categories_query = """
+        UNWIND $categories AS cat
+        MERGE (c:Criterion {name: cat})
+        """
+        # Lire les catégories depuis scores.csv
+        categories = set()
+        scores_path = DATASETS_DIR / "scores.csv"
+        with open(scores_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                categories.add(row.get("label") or row["category"])
+        await session.run(categories_query, categories=list(categories))
+
+        # 2) Créer les nœuds City depuis cities.csv
+        cities_path = DATASETS_DIR / "cities.csv"
+        cities_rows = []
+        with open(cities_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                cities_rows.append({
+                    "city_id": int(row["id"]),
+                    "name": row["name"],
+                    "department": row["department"],
+                    "region": row["region"],
+                    "population": int(row["population"]),
+                    "overall_score": float(row.get("overall_score") or 0),
+                })
+        for city in cities_rows:
+            await session.run("""
+                MERGE (c:City {city_id: $city_id})
+                SET c.name = $name, c.department = $department, c.region = $region,
+                    c.population = $population, c.overall_score = $overall_score
+            """, **city)
+
+        # 3) STRONG_IN : ville -> critère quand score >= 7
+        scores_path = DATASETS_DIR / "scores.csv"
+        with open(scores_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if float(row["score"]) >= 7:
+                    label = row.get("label") or row["category"]
+                    await session.run("""
+                        MATCH (city:City {city_id: $city_id})
+                        MATCH (cr:Criterion {name: $label})
+                        MERGE (city)-[:STRONG_IN]->(cr)
+                    """, city_id=int(row["city_id"]), label=label)
+
+        # 4) SIMILAR_TO : paires de villes avec critères forts en commun (score in [0, 1], capped at 1)
+        await session.run("""
+            MATCH (a:City)-[:STRONG_IN]->(c:Criterion)<-[:STRONG_IN]-(b:City)
+            WHERE a.city_id < b.city_id
+            WITH a, b, count(c) AS common,
+                 CASE WHEN (0.5 + 0.1 * count(c)) > 1.0 THEN 1.0 ELSE 0.5 + 0.1 * count(c) END AS simScore
+            CREATE (a)-[:SIMILAR_TO {score: simScore}]->(b)
+            CREATE (b)-[:SIMILAR_TO {score: simScore}]->(a)
+        """)
+    print("[seed] Neo4j — OK")
+    # ✂️ SOLUTION END
 
 
 async def main():
