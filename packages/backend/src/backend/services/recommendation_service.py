@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from backend.models import RecommendationsResponse
+from backend.models import City, RecommendationItem, RecommendationsResponse
 from backend.repositories.neo4j_repo import Neo4jRepository
 from backend.repositories.postgres_repo import PostgresRepository
 
@@ -30,4 +30,40 @@ class RecommendationService:
         3. Pour chaque résultat, enrichir avec les infos Postgres si besoin
         4. Construire et retourner un RecommendationsResponse
         """
-        raise NotImplementedError("RecommendationService.get_recommendations — À implémenter")
+        # ✂️ SOLUTION START
+        source = await self.postgres_repo.get_city_by_id(city_id)
+        if source is None:
+            return None
+
+        neo4j_results = await self.neo4j_repo.get_similar_cities(city_id, k=k)
+
+        items = []
+        for rec in neo4j_results:
+            city_data = rec["city"]
+            # Enrichir avec les données Postgres si le graphe n'a pas tout
+            target_id = city_data.get("city_id")
+            if target_id:
+                pg_data = await self.postgres_repo.get_city_by_id(target_id)
+                if pg_data:
+                    city_data = pg_data
+
+            items.append(
+                RecommendationItem(
+                    city=City(
+                        id=city_data.get("id", city_data.get("city_id", 0)),
+                        name=city_data.get("name", ""),
+                        department=city_data.get("department", ""),
+                        region=city_data.get("region", ""),
+                        population=city_data.get("population", 0),
+                        overall_score=city_data.get("overall_score", 0.0),
+                    ),
+                    similarity_score=rec["similarity_score"],
+                    common_strengths=rec["common_strengths"],
+                )
+            )
+
+        return RecommendationsResponse(
+            source_city=source["name"],
+            recommendations=items,
+        )
+        # ✂️ SOLUTION END

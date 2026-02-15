@@ -32,7 +32,20 @@ class CityService:
 
         TODO: Appeler self.repo.get_cities(...) et convertir en CityListResponse.
         """
-        raise NotImplementedError("CityService.search_cities — À implémenter")
+        # ✂️ SOLUTION START
+        rows, total = await self.repo.get_cities(
+            search=search,
+            region=region,
+            department=department,
+            min_population=min_population,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+        )
+        cities = [City(**row) for row in rows]
+        return CityListResponse(cities=cities, total=total, page=page, page_size=page_size)
+        # ✂️ SOLUTION END
 
     async def get_city_detail(self, city_id: int) -> Optional[CityDetail]:
         """Détails complets d'une ville (infos + scores).
@@ -42,11 +55,30 @@ class CityService:
         2. Appeler self.repo.get_city_scores(city_id)
         3. Combiner dans un CityDetail
         """
-        raise NotImplementedError("CityService.get_city_detail — À implémenter")
+        # ✂️ SOLUTION START
+        row = await self.repo.get_city_by_id(city_id)
+        if row is None:
+            return None
+
+        score_rows = await self.repo.get_city_scores(city_id)
+        scores = [ScoreCategory(**s) for s in score_rows]
+
+        return CityDetail(**row, scores=scores)
+        # ✂️ SOLUTION END
 
     async def get_city_scores(self, city_id: int) -> Optional[CityScores]:
         """Scores d'une ville.
 
         TODO: Appeler self.repo.get_city_scores(city_id) et convertir en CityScores.
         """
-        raise NotImplementedError("CityService.get_city_scores — À implémenter")
+        # ✂️ SOLUTION START
+        row = await self.repo.get_city_by_id(city_id)
+        if row is None:
+            return None
+
+        score_rows = await self.repo.get_city_scores(city_id)
+        scores = [ScoreCategory(**s) for s in score_rows]
+
+        overall = row.get("overall_score", 0.0)
+        return CityScores(city_id=city_id, scores=scores, overall=overall)
+        # ✂️ SOLUTION END

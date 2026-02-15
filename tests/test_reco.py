@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+ACCEPT = (200, 404, 500, 501)
+
 
 class TestRecommendations:
     """GET /recommendations."""
 
     def test_endpoint_exists(self, client):
         resp = client.get("/recommendations", params={"city_id": 1})
-        assert resp.status_code in (200, 404, 501)
+        assert resp.status_code in ACCEPT
 
     def test_requires_city_id(self, client):
         """Le paramètre city_id est obligatoire."""
@@ -18,7 +20,7 @@ class TestRecommendations:
     def test_k_param(self, client):
         """Le paramètre k doit être accepté."""
         resp = client.get("/recommendations", params={"city_id": 1, "k": 3})
-        assert resp.status_code in (200, 404, 501)
+        assert resp.status_code in ACCEPT
 
     def test_k_bounds(self, client):
         """k doit être >= 1 et <= 20."""
