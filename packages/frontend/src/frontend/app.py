@@ -39,42 +39,16 @@ else:
     )
 
 # ── Navigation ─────────────────────────────────────────────────
-st.sidebar.markdown("---")
-st.sidebar.markdown("### Navigation")
-# st.sidebar.page_link("frontend/app.py", label="Accueil", icon="🏠")
-# st.sidebar.page_link("packages/frontend/src/frontend/pages/1_Search.py", label="Explorer les villes", icon="🔍")
-# st.sidebar.page_link("frontend/pages/2_City_Details.py", label="Détails ville", icon="📊")
-# st.sidebar.page_link("frontend/pages/3_Recommendations.py", label="Recommandations", icon="🤝")
 
-# ── Contenu accueil ────────────────────────────────────────────
-st.markdown("---")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("### 🔍 Explorer")
-    st.markdown(
-        "Recherchez et filtrez les villes par région, "
-        "département, population et critères de qualité de vie."
-    )
-
-with col2:
-    st.markdown("### 📊 Comparer")
-    st.markdown(
-        "Visualisez les scores détaillés de chaque ville "
-        "avec des graphiques radar et barres interactifs."
-    )
-
-with col3:
-    st.markdown("### 🤝 Recommander")
-    st.markdown(
-        "Découvrez des villes similaires grâce au graphe "
-        "de relations Neo4j et aux critères communs."
-    )
-
-st.markdown("---")
-st.markdown(
-    "**Projet pédagogique** — "
-    "Architecture polyglotte : PostgreSQL + MongoDB + Neo4j | "
-    "Backend FastAPI | Frontend Streamlit"
+pg = st.navigation(pages=[
+        st.Page("pages/0_Home.py", title="Accueil", icon="🏠"),  # ← Changed
+        st.Page("pages/1_Search.py", title="Explorer les villes", icon="🔍"),
+        st.Page("pages/2_City_Details.py", title="Détails ville", icon="📊"),
+        st.Page("pages/3_Recommendations.py", title="Recommandations", icon="🤝")
+    ],
+    position="top",
 )
+
+pg.run()
+
+# Remove everything after pg.run() — the home content now lives in 0_Home.py

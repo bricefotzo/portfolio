@@ -20,7 +20,7 @@ if city_id is None:
     st.warning("Aucune ville sélectionnée.")
     st.info("Rendez-vous sur la page **Explorer** pour choisir une ville.")
     if st.button("🔍 Aller à Explorer"):
-        st.switch_page("frontend/pages/1_Search.py")
+        st.switch_page("pages/1_Search.py")
     st.stop()
 
 # ── Chargement des données ─────────────────────────────────────
@@ -123,7 +123,7 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 with col1:
     if st.button("🔍 Retour à l'exploration"):
-        st.switch_page("frontend/pages/1_Search.py")
+        st.switch_page("pages/1_Search.py")
 with col2:
     if st.button("🤝 Voir les recommandations"):
-        st.switch_page("frontend/pages/3_Recommendations.py")
+        st.switch_page("pages/3_Recommendations.py")

@@ -20,7 +20,7 @@ if city_id is None:
     st.warning("Aucune ville sélectionnée.")
     st.info("Rendez-vous sur la page **Explorer** pour choisir une ville.")
     if st.button("🔍 Aller à Explorer"):
-        st.switch_page("frontend/pages/1_Search.py")
+        st.switch_page("pages/1_Search.py")
     st.stop()
 
 st.markdown(f"Villes similaires à **{city_name}**")
@@ -82,12 +82,12 @@ for i, reco in enumerate(recommendations):
         # Bouton détails
         if st.button(f"📊 Détails de {city.get('name', '?')}", key=f"reco_{i}"):
             select_city(city.get("id", 0), city.get("name", ""))
-            st.switch_page("frontend/pages/2_City_Details.py")
+            st.switch_page("pages/2_City_Details.py")
 
         st.markdown("---")
 
 # ── Navigation ─────────────────────────────────────────────────
 if st.button("🔍 Retour à l'exploration"):
-    st.switch_page("frontend/pages/1_Search.py")
+    st.switch_page("pages/1_Search.py")
 if st.button("📊 Retour aux détails"):
-    st.switch_page("frontend/pages/2_City_Details.py")
+    st.switch_page("pages/2_City_Details.py")
