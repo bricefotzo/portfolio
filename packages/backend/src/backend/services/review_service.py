@@ -24,7 +24,11 @@ class ReviewService:
 
         TODO: Appeler self.repo.get_reviews(...) et convertir en ReviewsResponse.
         """
-        raise NotImplementedError("ReviewService.get_reviews — À implémenter")
+        # ✂️ SOLUTION START
+        docs, total = await self.repo.get_reviews(city_id, page=page, page_size=page_size)
+        reviews = [Review(city_id=city_id, **doc) for doc in docs]
+        return ReviewsResponse(reviews=reviews, total=total)
+        # ✂️ SOLUTION END
 
     async def create_review(self, city_id: int, review: ReviewCreate) -> Review:
         """Crée un nouvel avis.
@@ -34,4 +38,8 @@ class ReviewService:
         2. Appeler self.repo.create_review(city_id, data)
         3. Retourner un Review
         """
-        raise NotImplementedError("ReviewService.create_review — À implémenter")
+        # ✂️ SOLUTION START
+        data = review.model_dump()
+        doc = await self.repo.create_review(city_id, data)
+        return Review(city_id=city_id, **doc)
+        # ✂️ SOLUTION END

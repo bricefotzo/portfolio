@@ -33,7 +33,35 @@ class Neo4jRepository:
           (City)-[:STRONG_IN]->(Criterion)
           (City)-[:SIMILAR_TO {score: 0.87}]->(City)
         """
-        raise NotImplementedError("Neo4jRepository.get_similar_cities — À implémenter")
+        # ✂️ SOLUTION START
+        query = """
+        MATCH (source:City {city_id: $city_id})-[r:SIMILAR_TO]->(target:City)
+        OPTIONAL MATCH (source)-[:STRONG_IN]->(c:Criterion)<-[:STRONG_IN]-(target)
+        WITH target, r.score AS similarity_score,
+             COLLECT(DISTINCT c.name) AS common_strengths
+        RETURN target {
+            .city_id, .name, .department, .region,
+            .population, .overall_score
+        } AS city,
+        similarity_score,
+        common_strengths
+        ORDER BY similarity_score DESC
+        LIMIT $k
+        """
+
+        async with self.driver.session() as session:
+            result = await session.run(query, city_id=city_id, k=k)
+            records = await result.data()
+
+        return [
+            {
+                "city": record["city"],
+                "similarity_score": record["similarity_score"],
+                "common_strengths": record["common_strengths"],
+            }
+            for record in records
+        ]
+        # ✂️ SOLUTION END
 
     async def get_city_strengths(self, city_id: int) -> list[str]:
         """Récupère les points forts d'une ville (relations STRONG_IN).
@@ -42,4 +70,15 @@ class Neo4jRepository:
         - MATCH (c:City {city_id: $city_id})-[:STRONG_IN]->(cr:Criterion)
         - RETURN cr.name
         """
-        raise NotImplementedError("Neo4jRepository.get_city_strengths — À implémenter")
+        # ✂️ SOLUTION START
+        query = """
+        MATCH (c:City {city_id: $city_id})-[:STRONG_IN]->(cr:Criterion)
+        RETURN cr.name AS name
+        """
+
+        async with self.driver.session() as session:
+            result = await session.run(query, city_id=city_id)
+            records = await result.data()
+
+        return [record["name"] for record in records]
+        # ✂️ SOLUTION END

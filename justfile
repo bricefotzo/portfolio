@@ -37,7 +37,28 @@ test-v:
 seed:
     uv run --package backend python -m backend.scripts.seed_all
 
+# ── Docker (bases de données) ─────────────────────────────────
+db-up:
+    docker compose up -d
+
+db-down:
+    docker compose down
+
+db-reset:
+    docker compose down -v
+    docker compose up -d
+
+# ── Distribution étudiante ────────────────────────────────────
+# Prévisualiser les blocs qui seront retirés
+strip-dry:
+    python scripts/strip_solutions.py
+
+# Générer une copie étudiante dans dist/student/
+strip:
+    python scripts/strip_solutions.py --output dist/student
+
 # ── Clean ──────────────────────────────────────────────────────
 clean:
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
     find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
+    rm -rf dist/

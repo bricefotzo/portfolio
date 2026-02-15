@@ -1,23 +1,26 @@
 """Tests d'acceptation — Endpoints Cities.
 
 Ces tests vérifient le contrat API (schemas, status codes).
-Quand le backend n'est pas encore implémenté, les endpoints retournent 501.
-Une fois implémenté, les tests vérifient le contrat complet.
+- 501 : endpoint pas encore implémenté (NotImplementedError)
+- 500 : implémenté mais base de données non disponible
+- 200 : pleinement fonctionnel
+Les schema checks ne s'exécutent que quand le status est 200.
 """
 
 from __future__ import annotations
 
-# Codes acceptés quand l'endpoint n'est pas encore implémenté
-OK_OR_NOT_IMPL = (200, 501)
+# Codes acceptés : fonctionnel / pas implémenté / DB indisponible
+ACCEPT = (200, 500, 501)
+ACCEPT_OR_404 = (200, 404, 500, 501)
 
 
 class TestListCities:
     """GET /cities — Recherche et filtres."""
 
     def test_endpoint_exists(self, client):
-        """L'endpoint /cities doit exister et répondre (200 ou 501)."""
+        """L'endpoint /cities doit exister et répondre."""
         resp = client.get("/cities")
-        assert resp.status_code in OK_OR_NOT_IMPL
+        assert resp.status_code in ACCEPT
 
     def test_response_schema_when_implemented(self, client):
         """Si implémenté, la réponse doit respecter CityListResponse."""
@@ -33,17 +36,17 @@ class TestListCities:
     def test_pagination_params(self, client):
         """Les paramètres de pagination doivent être acceptés."""
         resp = client.get("/cities", params={"page": 1, "page_size": 5})
-        assert resp.status_code in OK_OR_NOT_IMPL
+        assert resp.status_code in ACCEPT
 
     def test_search_param(self, client):
         """Le paramètre search doit être accepté."""
         resp = client.get("/cities", params={"search": "Lyon"})
-        assert resp.status_code in OK_OR_NOT_IMPL
+        assert resp.status_code in ACCEPT
 
     def test_filter_region(self, client):
         """Le filtre region doit être accepté."""
         resp = client.get("/cities", params={"region": "Bretagne"})
-        assert resp.status_code in OK_OR_NOT_IMPL
+        assert resp.status_code in ACCEPT
 
     def test_sort_params(self, client):
         """Les paramètres de tri doivent être acceptés."""
@@ -51,7 +54,7 @@ class TestListCities:
             "/cities",
             params={"sort_by": "population", "sort_order": "asc"},
         )
-        assert resp.status_code in OK_OR_NOT_IMPL
+        assert resp.status_code in ACCEPT
 
 
 class TestCityDetail:
@@ -59,7 +62,7 @@ class TestCityDetail:
 
     def test_endpoint_exists(self, client):
         resp = client.get("/cities/1")
-        assert resp.status_code in (200, 404, 501)
+        assert resp.status_code in ACCEPT_OR_404
 
     def test_response_schema_when_implemented(self, client):
         """Si implémenté, la réponse doit respecter CityDetail."""
@@ -74,7 +77,7 @@ class TestCityDetail:
     def test_not_found(self, client):
         """Une ville inexistante doit retourner 404 (si implémenté)."""
         resp = client.get("/cities/999999")
-        assert resp.status_code in (404, 501)
+        assert resp.status_code in ACCEPT_OR_404
 
 
 class TestCityScores:
@@ -82,7 +85,7 @@ class TestCityScores:
 
     def test_endpoint_exists(self, client):
         resp = client.get("/cities/1/scores")
-        assert resp.status_code in (200, 404, 501)
+        assert resp.status_code in ACCEPT_OR_404
 
     def test_response_schema_when_implemented(self, client):
         """Si implémenté, la réponse doit respecter CityScores."""

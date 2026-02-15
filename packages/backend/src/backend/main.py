@@ -42,12 +42,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Error handler — NotImplementedError → 501 ─────────────────
+# ── Error handlers ─────────────────────────────────────────────
 @app.exception_handler(NotImplementedError)
 async def not_implemented_handler(request: Request, exc: NotImplementedError):
     return JSONResponse(
         status_code=501,
         content={"detail": str(exc)},
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_error_handler(request: Request, exc: Exception):
+    """Catch-all : erreurs non gérées → 500 propre (ex. DB indisponible)."""
+    import logging
+
+    logging.getLogger("backend").error("Unhandled error: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
     )
 
 

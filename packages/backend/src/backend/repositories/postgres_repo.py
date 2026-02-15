@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import Optional
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# Colonnes autorisées pour le tri (protection contre l'injection SQL)
+_ALLOWED_SORT = {"overall_score", "population", "name", "department", "region"}
 
 
 class PostgresRepository:
@@ -37,7 +41,49 @@ class PostgresRepository:
         - Pagination OFFSET/LIMIT
         - Retourner (liste_de_dicts, total_count)
         """
-        raise NotImplementedError("PostgresRepository.get_cities — À implémenter")
+        # ✂️ SOLUTION START
+        conditions = []
+        params: dict = {}
+
+        if search:
+            conditions.append("name ILIKE :search")
+            params["search"] = f"%{search}%"
+        if region:
+            conditions.append("region = :region")
+            params["region"] = region
+        if department:
+            conditions.append("department = :department")
+            params["department"] = department
+        if min_population is not None:
+            conditions.append("population >= :min_pop")
+            params["min_pop"] = min_population
+
+        where_clause = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+
+        # Sécuriser le tri
+        col = sort_by if sort_by in _ALLOWED_SORT else "overall_score"
+        direction = "ASC" if sort_order == "asc" else "DESC"
+        order_clause = f" ORDER BY {col} {direction}"
+
+        # Total
+        count_sql = f"SELECT COUNT(*) FROM cities{where_clause}"
+        result = await self.session.execute(text(count_sql), params)
+        total = result.scalar_one()
+
+        # Données paginées
+        offset = (page - 1) * page_size
+        data_sql = (
+            f"SELECT id, name, department, region, population, overall_score "
+            f"FROM cities{where_clause}{order_clause} "
+            f"LIMIT :limit OFFSET :offset"
+        )
+        params["limit"] = page_size
+        params["offset"] = offset
+
+        result = await self.session.execute(text(data_sql), params)
+        rows = result.mappings().all()
+        return [dict(r) for r in rows], total
+        # ✂️ SOLUTION END
 
     async def get_city_by_id(self, city_id: int) -> Optional[dict]:
         """Récupère les détails d'une ville par son ID.
@@ -46,7 +92,16 @@ class PostgresRepository:
         avec toutes ses colonnes (name, department, region, population,
         description, latitude, longitude, overall_score).
         """
-        raise NotImplementedError("PostgresRepository.get_city_by_id — À implémenter")
+        # ✂️ SOLUTION START
+        sql = text(
+            "SELECT id, name, department, region, population, description, "
+            "latitude, longitude, overall_score "
+            "FROM cities WHERE id = :city_id"
+        )
+        result = await self.session.execute(sql, {"city_id": city_id})
+        row = result.mappings().first()
+        return dict(row) if row else None
+        # ✂️ SOLUTION END
 
     async def get_city_scores(self, city_id: int) -> list[dict]:
         """Récupère les scores par catégorie pour une ville.
@@ -54,4 +109,12 @@ class PostgresRepository:
         TODO: Implémenter la jointure entre cities et scores.
         Retourner une liste de dicts: [{"category": ..., "score": ..., "label": ...}]
         """
-        raise NotImplementedError("PostgresRepository.get_city_scores — À implémenter")
+        # ✂️ SOLUTION START
+        sql = text(
+            "SELECT category, label, score "
+            "FROM scores WHERE city_id = :city_id "
+            "ORDER BY category"
+        )
+        result = await self.session.execute(sql, {"city_id": city_id})
+        return [dict(r) for r in result.mappings().all()]
+        # ✂️ SOLUTION END
