@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.sprint5
+
 
 def test_health_returns_ok(client):
     """GET /health doit retourner status=ok."""

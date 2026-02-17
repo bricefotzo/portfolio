@@ -9,6 +9,10 @@ Les schema checks ne s'exécutent que quand le status est 200.
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.sprint5
+
 # Codes acceptés : fonctionnel / pas implémenté / DB indisponible
 ACCEPT = (200, 500, 501)
 ACCEPT_OR_404 = (200, 404, 500, 501)

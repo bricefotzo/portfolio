@@ -33,6 +33,7 @@ class MongoRepository:
         - Retourner (liste_de_docs, total_count)
         - Convertir ObjectId en str pour le champ "id"
         """
+        # TODO: Implémenter find + pagination + conversion _id -> id
         # ✂️ SOLUTION START
         query = {"city_id": city_id}
 
@@ -62,6 +63,7 @@ class MongoRepository:
         - Insérer dans la collection reviews
         - Retourner le document créé (avec id converti en str)
         """
+        # TODO: Implémenter insert_one + city_id/created_at, retourner doc avec id (str)
         # ✂️ SOLUTION START
         doc = {
             **review_data,
@@ -82,6 +84,7 @@ class MongoRepository:
         - $match par city_id
         - $group avec $avg sur rating
         """
+        # TODO: Implémenter pipeline d'agrégation $match + $group $avg
         # ✂️ SOLUTION START
         pipeline = [
             {"$match": {"city_id": city_id}},

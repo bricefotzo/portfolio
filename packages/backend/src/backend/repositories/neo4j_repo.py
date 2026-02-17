@@ -33,6 +33,7 @@ class Neo4jRepository:
           (City)-[:STRONG_IN]->(Criterion)
           (City)-[:SIMILAR_TO {score: 0.87}]->(City)
         """
+        # TODO: Implémenter requête Cypher MATCH SIMILAR_TO, retourner city + similarity_score + common_strengths
         # ✂️ SOLUTION START
         query = """
         MATCH (source:City {city_id: $city_id})-[r:SIMILAR_TO]->(target:City)
@@ -70,6 +71,7 @@ class Neo4jRepository:
         - MATCH (c:City {city_id: $city_id})-[:STRONG_IN]->(cr:Criterion)
         - RETURN cr.name
         """
+        # TODO: Implémenter requête Cypher MATCH STRONG_IN -> Criterion, RETURN name
         # ✂️ SOLUTION START
         query = """
         MATCH (c:City {city_id: $city_id})-[:STRONG_IN]->(cr:Criterion)

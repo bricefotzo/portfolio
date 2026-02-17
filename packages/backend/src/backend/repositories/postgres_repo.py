@@ -41,6 +41,7 @@ class PostgresRepository:
         - Pagination OFFSET/LIMIT
         - Retourner (liste_de_dicts, total_count)
         """
+        # TODO: Implémenter la requête SQL (filtres, tri, pagination, count)
         # ✂️ SOLUTION START
         conditions = []
         params: dict = {}
@@ -92,6 +93,7 @@ class PostgresRepository:
         avec toutes ses colonnes (name, department, region, population,
         description, latitude, longitude, overall_score).
         """
+        # TODO: Implémenter SELECT une ville par id
         # ✂️ SOLUTION START
         sql = text(
             "SELECT id, name, department, region, population, description, "
@@ -109,6 +111,7 @@ class PostgresRepository:
         TODO: Implémenter la jointure entre cities et scores.
         Retourner une liste de dicts: [{"category": ..., "score": ..., "label": ...}]
         """
+        # TODO: Implémenter SELECT scores pour une ville (table scores)
         # ✂️ SOLUTION START
         sql = text(
             "SELECT category, label, score "
