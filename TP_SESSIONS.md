@@ -1,54 +1,85 @@
-# SmartCity Explorer — Plan des sessions TP
+# SmartCity Explorer — Sessions TP
 
 ## Vue d'ensemble
 
-| Session | Horaire | Thème | Fichiers à implémenter | Tests à lancer |
-|---------|---------|-------|------------------------|----------------|
-| **TP1** | Jour 1 — Matin (4h) | Setup + PostgreSQL | `postgres_repo.py` | `tests/unit/test_tp1_postgres_repo.py` |
-| **TP2** | Jour 1 — Après-midi (4h) | Service City | `city_service.py` | `tests/unit/test_tp2_city_service.py` + `tests/test_cities.py` |
-| **TP3** | Jour 2 — Matin (4h) | MongoDB + Reviews | `mongo_repo.py` + `review_service.py` | `tests/unit/test_tp3_*.py` + `tests/test_reviews.py` |
-| **TP4** | Jour 2 — Après-midi (4h) | Neo4j + Recommandations | `neo4j_repo.py` + `recommendation_service.py` | `tests/unit/test_tp4_*.py` + `tests/test_reco.py` |
-| **TP5** | Jour 3 — Matin (4h) | Intégration + Seed + Révision | `seed_all.py` (optionnel) | `uv run pytest -v` (tous) |
+| Sprint | Horaire | Thème | Fichiers à implémenter | Tests à lancer |
+|--------|---------|-------|------------------------|----------------|
+| **Sprint 1** | Jour 1 — Matin (4h) | Setup + PostgreSQL | `postgres_repo.py` | `tests/unit/test_tp1_postgres_repo.py` |
+| **Sprint 2** | Jour 1 — Après-midi (4h) | Service City | `city_service.py` | `tests/unit/test_tp2_city_service.py` + `tests/test_cities.py` |
+| **Sprint 3** | Jour 2 — Matin (4h) | MongoDB + Reviews | `mongo_repo.py` + `review_service.py` | `tests/unit/test_tp3_*.py` + `tests/test_reviews.py` |
+| **Sprint 4** | Jour 2 — Après-midi (4h) | Neo4j + Recommandations | `neo4j_repo.py` + `recommendation_service.py` | `tests/unit/test_tp4_*.py` + `tests/test_reco.py` |
+| **Sprint 5** | Jour 3 — Matin (4h) | Intégration + Seed + Révision | `seed_all.py` (optionnel) | `uv run pytest -v` (tous) |
 | **Contrôle** | Jour 3 — Soir | Évaluation | — | — |
+
+Each database serves a specific purpose:
+- **PostgreSQL** : Données structurées des villes (profils, scores, filtrage)
+- **MongoDB** : Documents flexibles pour les avis utilisateurs (CRUD, agrégation)
+- **Neo4j** : Graphe de similarité entre villes (relations, recommandations)
 
 ---
 
-## TP1 — Jour 1 Matin (4h) : Setup + Repository PostgreSQL
+## Sprint 1: Setup + Repository PostgreSQL
 
-### Objectifs
-- Installer l'environnement de développement
-- Comprendre l'architecture du projet (repos, services, routes)
-- Implémenter les requêtes SQL via SQLAlchemy async
+Bienvenue dans le projet SmartCity Explorer. Aujourd'hui, nous allons mettre en place l'environnement et implémenter les premières requêtes SQL via SQLAlchemy async.
 
-### Setup (30 min)
+### Setup de l'environnement
+
+**Step 1:** Installer uv (si pas déjà fait)
 ```bash
-# 1. Installer uv (si pas déjà fait)
 curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
-# 2. Installer les dépendances
+**Step 2:** Installer les dépendances
+```bash
 uv sync --all-packages
+```
 
-# 3. Copier la configuration
-cp .env.example .env  # puis remplir les identifiants DB
+**Step 3:** Copier et configurer les variables d'environnement
+```bash
+cp .env.example .env
+# → Remplir les identifiants DB (POSTGRES_URI, MONGODB_URI, NEO4J_URI)
+```
 
-# 4. Lancer les bases de données
+**Step 4:** Lancer les bases de données
+```bash
 docker compose up -d
+```
 
-# 5. Charger les données (si script seed fourni)
+**Step 5:** Charger les données initiales
+```bash
 just seed
+```
 
-# 6. Vérifier que le serveur démarre
+**Step 6:** Vérifier que le serveur démarre
+```bash
 just dev-backend
 # → http://localhost:8000/docs
+```
 
-# 7. Vérifier que les tests de base passent
+**Step 7:** Vérifier que les tests de base passent
+```bash
 uv run pytest tests/test_health.py -v
 ```
 
-### Fichier à compléter
-`packages/backend/src/backend/repositories/postgres_repo.py`
+### Rappel d'architecture
+```
+Route API  →  Service  →  Repository  →  Base de données
+(FastAPI)     (logique)   (requêtes)     (PostgreSQL / MongoDB / Neo4j)
+```
 
-### Méthodes à implémenter (par ordre de difficulté)
+### Task
+
+Implémenter les requêtes SQL du repository PostgreSQL pour gérer les données des villes.
+
+### User Stories
+
+- "En tant que développeur, je veux récupérer les informations d'une ville par son identifiant"
+- "En tant que développeur, je veux lister les scores d'une ville par catégorie"
+- "En tant que développeur, je veux rechercher des villes avec des filtres, du tri et de la pagination"
+
+### Methods to Implement
+
+File: `packages/backend/src/backend/repositories/postgres_repo.py`
 
 #### 1. `get_city_by_id(city_id)` → `dict | None`
 - **Difficulté** : ★☆☆
@@ -72,9 +103,9 @@ uv run pytest tests/test_health.py -v
   4. Retourner `(liste_de_dicts, total)`
 - **Attention** : ne pas oublier de valider `sort_by` contre `_ALLOWED_SORT`
 
-### Tests
+### Testing
 ```bash
-# Lancer les tests unitaires TP1
+# Lancer les tests unitaires Sprint 1
 uv run pytest tests/unit/test_tp1_postgres_repo.py -v
 ```
 
@@ -94,23 +125,23 @@ uv run pytest tests/unit/test_tp1_postgres_repo.py -v
 
 ---
 
-## TP2 — Jour 1 Après-midi (4h) : Service City (Orchestration)
+## Sprint 2: Service City (Orchestration)
 
-### Objectifs
-- Comprendre le pattern Service / Repository
-- Implémenter la couche d'orchestration entre les routes API et le repository
-- Convertir les données brutes (dicts) en modèles Pydantic
+Maintenant que le repository fonctionne, nous allons implémenter la couche service qui orchestre les appels au repository et convertit les données brutes en modèles Pydantic.
 
-### Rappel d'architecture
-```
-Route API  →  Service  →  Repository  →  Base de données
-(FastAPI)     (logique)   (requêtes)     (PostgreSQL)
-```
+### Task
 
-### Fichier à compléter
-`packages/backend/src/backend/services/city_service.py`
+Implémenter la couche d'orchestration entre les routes API et le repository PostgreSQL.
 
-### Méthodes à implémenter
+### User Stories
+
+- "En tant qu'utilisateur, je veux rechercher des villes et obtenir une liste paginée"
+- "En tant qu'utilisateur, je veux voir les détails d'une ville avec ses scores"
+- "En tant qu'utilisateur, je veux consulter les scores d'une ville par catégorie"
+
+### Methods to Implement
+
+File: `packages/backend/src/backend/services/city_service.py`
 
 #### 1. `search_cities(**params)` → `CityListResponse`
 - **Difficulté** : ★☆☆
@@ -134,9 +165,9 @@ Route API  →  Service  →  Repository  →  Base de données
   2. Récupérer les scores (`get_city_scores` du repo)
   3. Retourner `CityScores(city_id=..., scores=..., overall=...)`
 
-### Tests
+### Testing
 ```bash
-# Tests unitaires TP2
+# Tests unitaires Sprint 2
 uv run pytest tests/unit/test_tp2_city_service.py -v
 
 # Tests d'acceptation (endpoint complet route → service → repo)
@@ -161,18 +192,23 @@ uv run pytest tests/unit/test_tp2_city_service.py tests/test_cities.py -v
 
 ---
 
-## TP3 — Jour 2 Matin (4h) : MongoDB + Service Reviews
+## Sprint 3: MongoDB + Service Reviews
 
-### Objectifs
-- Découvrir MongoDB (base documentaire) via le driver Motor (async)
-- Implémenter les opérations CRUD sur les avis
-- Maîtriser le pipeline d'agrégation MongoDB
+Nous abordons maintenant MongoDB, une base documentaire. Vous allez implémenter les opérations CRUD pour les avis utilisateurs, puis la couche service correspondante.
 
-### Fichiers à compléter
-1. `packages/backend/src/backend/repositories/mongo_repo.py`
-2. `packages/backend/src/backend/services/review_service.py`
+### Task
 
-### Partie 1 — Repository MongoDB (~2h30)
+Implémenter les opérations MongoDB pour gérer les avis, puis orchestrer via le service.
+
+### User Stories
+
+- "En tant qu'utilisateur, je veux consulter les avis sur une ville avec pagination"
+- "En tant qu'utilisateur, je veux publier un avis sur une ville"
+- "En tant que développeur, je veux calculer la note moyenne d'une ville via agrégation"
+
+### Part 1: Repository MongoDB (~2h30)
+
+File: `packages/backend/src/backend/repositories/mongo_repo.py`
 
 #### 1. `get_reviews(city_id, page, page_size)` → `tuple[list[dict], int]`
 - **Difficulté** : ★★☆
@@ -203,7 +239,9 @@ uv run pytest tests/unit/test_tp2_city_service.py tests/test_cities.py -v
   ]
   ```
 
-### Partie 2 — Service Reviews (~1h30)
+### Part 2: Service Reviews (~1h30)
+
+File: `packages/backend/src/backend/services/review_service.py`
 
 #### 1. `get_reviews(city_id, page, page_size)` → `ReviewsResponse`
 - **Difficulté** : ★☆☆
@@ -213,15 +251,15 @@ uv run pytest tests/unit/test_tp2_city_service.py tests/test_cities.py -v
 - **Difficulté** : ★☆☆
 - Convertir `ReviewCreate` en dict (`review.model_dump()`), appeler le repo
 
-### Tests
+### Testing
 ```bash
-# Tests unitaires TP3 (repo + service)
+# Tests unitaires Sprint 3 (repo + service)
 uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_service.py -v
 
 # Tests d'acceptation
 uv run pytest tests/test_reviews.py -v
 
-# Tout TP3
+# Tout Sprint 3
 uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_service.py tests/test_reviews.py -v
 ```
 
@@ -243,16 +281,19 @@ uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_servi
 
 ---
 
-## TP4 — Jour 2 Après-midi (4h) : Neo4j + Recommandations
+## Sprint 4: Neo4j + Recommandations
 
-### Objectifs
-- Découvrir Neo4j (base de données graphe) et le langage Cypher
-- Parcourir un graphe de similarité entre villes
-- Implémenter une orchestration multi-repositories (PostgreSQL + Neo4j)
+Découvrons Neo4j, une base de données graphe, et le langage Cypher. Nous allons parcourir un graphe de similarité entre villes pour construire un système de recommandations.
 
-### Fichiers à compléter
-1. `packages/backend/src/backend/repositories/neo4j_repo.py`
-2. `packages/backend/src/backend/services/recommendation_service.py`
+### Task
+
+Implémenter les requêtes Cypher et le service de recommandation multi-repositories.
+
+### User Stories
+
+- "En tant qu'utilisateur, je veux découvrir des villes similaires à celle que je consulte"
+- "En tant qu'utilisateur, je veux connaître les points forts d'une ville"
+- "En tant que développeur, je veux orchestrer des données entre PostgreSQL et Neo4j"
 
 ### Rappel — Structure du graphe
 ```
@@ -260,7 +301,9 @@ uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_servi
 (City)-[:SIMILAR_TO {score: 0.87}]->(City)  # Similarité entre villes
 ```
 
-### Partie 1 — Repository Neo4j (~2h)
+### Part 1: Repository Neo4j (~2h)
+
+File: `packages/backend/src/backend/repositories/neo4j_repo.py`
 
 #### 1. `get_similar_cities(city_id, k)` → `list[dict]`
 - **Difficulté** : ★★★
@@ -287,7 +330,9 @@ uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_servi
   RETURN cr.name AS name
   ```
 
-### Partie 2 — Service Recommendations (~2h)
+### Part 2: Service Recommendations (~2h)
+
+File: `packages/backend/src/backend/services/recommendation_service.py`
 
 #### 1. `get_recommendations(city_id, k)` → `RecommendationsResponse | None`
 - **Difficulté** : ★★★
@@ -298,15 +343,15 @@ uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_servi
   4. Construire les `RecommendationItem` avec `City`, `similarity_score`, `common_strengths`
   5. Retourner `RecommendationsResponse(source_city=..., recommendations=...)`
 
-### Tests
+### Testing
 ```bash
-# Tests unitaires TP4 (repo + service)
+# Tests unitaires Sprint 4 (repo + service)
 uv run pytest tests/unit/test_tp4_neo4j_repo.py tests/unit/test_tp4_reco_service.py -v
 
 # Tests d'acceptation
 uv run pytest tests/test_reco.py -v
 
-# Tout TP4
+# Tout Sprint 4
 uv run pytest tests/unit/test_tp4_neo4j_repo.py tests/unit/test_tp4_reco_service.py tests/test_reco.py -v
 ```
 
@@ -325,13 +370,18 @@ uv run pytest tests/unit/test_tp4_neo4j_repo.py tests/unit/test_tp4_reco_service
 
 ---
 
-## TP5 — Jour 3 Matin (4h) : Intégration, Seed & Révision
+## Sprint 5: Intégration, Seed & Révision
 
-### Objectifs
-- Assembler toutes les couches et vérifier le fonctionnement complet
-- (Optionnel) Implémenter le script de seed
-- Tester l'application de bout en bout via Swagger UI et le frontend Streamlit
-- Réviser en préparation du contrôle
+Dernière session avant le contrôle. Nous allons assembler toutes les couches, vérifier le fonctionnement complet de l'application, et réviser les concepts clés.
+
+### Task
+
+Valider l'intégration de bout en bout et préparer le contrôle.
+
+### User Stories
+
+- "En tant que développeur, je veux vérifier que toute l'application fonctionne de bout en bout"
+- "En tant qu'utilisateur, je veux naviguer dans l'application complète (API + frontend)"
 
 ### Vérification complète
 ```bash
@@ -389,18 +439,26 @@ just seed
 ## Récapitulatif des commandes de test
 
 ```bash
-# TP1 — PostgreSQL Repository
+# Sprint 1 — PostgreSQL Repository
 uv run pytest tests/unit/test_tp1_postgres_repo.py -v
 
-# TP2 — City Service
+# Sprint 2 — City Service
 uv run pytest tests/unit/test_tp2_city_service.py tests/test_cities.py -v
 
-# TP3 — MongoDB + Reviews
+# Sprint 3 — MongoDB + Reviews
 uv run pytest tests/unit/test_tp3_mongo_repo.py tests/unit/test_tp3_review_service.py tests/test_reviews.py -v
 
-# TP4 — Neo4j + Recommendations
+# Sprint 4 — Neo4j + Recommendations
 uv run pytest tests/unit/test_tp4_neo4j_repo.py tests/unit/test_tp4_reco_service.py tests/test_reco.py -v
 
-# TP5 — Tout
+# Sprint 5 — Tout
 uv run pytest -v
 ```
+
+---
+
+Remember to:
+- Gérer les erreurs de manière appropriée
+- Suivre les spécifications des tests
+- Documenter votre code
+- Utiliser les fonctionnalités propres à chaque base de données
