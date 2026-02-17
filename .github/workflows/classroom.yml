@@ -1,0 +1,76 @@
+name: Autograding Tests
+'on':
+  - push
+  - workflow_dispatch
+  - repository_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --all-packages
+
+      - name: Sprint 1 Tests
+        id: sprint-1
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Sprint 1 Tests
+          command: uv run pytest -m sprint1 -v
+          timeout: 20
+          max-score: 25
+
+      - name: Sprint 2 Tests
+        id: sprint-2
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Sprint 2 Tests
+          command: uv run pytest -m sprint2 -v
+          timeout: 20
+          max-score: 25
+
+      - name: Sprint 3 Tests
+        id: sprint-3
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Sprint 3 Tests
+          command: uv run pytest -m sprint3 -v
+          timeout: 20
+          max-score: 25
+
+      - name: Sprint 4 Tests
+        id: sprint-4
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Sprint 4 Tests
+          command: uv run pytest -m sprint4 -v
+          timeout: 20
+          max-score: 25
+
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          SPRINT-1_RESULTS: "${{ steps.sprint-1.outputs.result }}"
+          SPRINT-2_RESULTS: "${{ steps.sprint-2.outputs.result }}"
+          SPRINT-3_RESULTS: "${{ steps.sprint-3.outputs.result }}"
+          SPRINT-4_RESULTS: "${{ steps.sprint-4.outputs.result }}"
+        with:
+          runners: sprint-1,sprint-2,sprint-3,sprint-4
