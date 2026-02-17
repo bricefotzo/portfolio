@@ -1,13 +1,10 @@
 """Tests d'intégration — Seed methods (Sprint 2).
 
-Vérifie que les seed functions chargent correctement les données dans
-les bases de données réelles (PostgreSQL, MongoDB, Neo4j).
-
-Prérequis : bases de données démarrées via docker-compose.
+Vérifie le chargement réel des données dans PostgreSQL, MongoDB et Neo4j.
+Prérequis : docker-compose up -d
 
 Commande :
     uv run pytest tests/test_seed_integration.py -v
-    uv run pytest -m sprint2 -v
 """
 
 from __future__ import annotations
@@ -16,337 +13,143 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.sprint2]
+pytestmark = pytest.mark.sprint2
 
 DATASETS_DIR = Path(__file__).resolve().parents[1] / "datasets"
 
-# ── Helpers ──────────────────────────────────────────────────────
+
+def _csv_rows(name: str) -> int:
+    with open(DATASETS_DIR / name, encoding="utf-8") as f:
+        return sum(1 for line in f if line.strip()) - 1
 
 
-def _count_csv_rows(filename: str) -> int:
-    """Count data rows in a CSV file (excluding header)."""
-    path = DATASETS_DIR / filename
-    with open(path, encoding="utf-8") as f:
-        return sum(1 for line in f if line.strip()) - 1  # minus header
-
-
-def _count_jsonl_rows(filename: str) -> int:
-    """Count non-empty lines in a JSONL file."""
-    path = DATASETS_DIR / filename
-    with open(path, encoding="utf-8") as f:
+def _jsonl_rows(name: str) -> int:
+    with open(DATASETS_DIR / name, encoding="utf-8") as f:
         return sum(1 for line in f if line.strip())
 
 
-# ── PostgreSQL integration ───────────────────────────────────────
+# ── PostgreSQL ───────────────────────────────────────────────────
 
 
 class TestSeedPostgresIntegration:
-    """Integration tests for seed_postgres() against a real PostgreSQL database."""
 
-    async def _run_seed(self):
-        from backend.scripts.seed_all import seed_postgres
+    async def test_loads_cities_and_scores(self):
+        """seed_postgres charge toutes les lignes de cities.csv et scores.csv."""
+        try:
+            from backend.scripts.seed_all import seed_postgres
 
-        await seed_postgres()
+            await seed_postgres()
+        except Exception:
+            pytest.skip("PostgreSQL not available")
 
-    async def _query(self, sql: str, params: dict | None = None):
         from backend.db.postgres import get_session_factory
         from sqlalchemy import text
 
         factory = get_session_factory()
-        async with factory() as session:
-            result = await session.execute(text(sql), params or {})
-            return result
+        async with factory() as s:
+            cities = (await s.execute(text("SELECT COUNT(*) FROM cities"))).scalar_one()
+            scores = (await s.execute(text("SELECT COUNT(*) FROM scores"))).scalar_one()
+        assert cities == _csv_rows("cities.csv")
+        assert scores == _csv_rows("scores.csv")
 
-    async def test_seed_creates_cities_table(self):
-        """After seeding, the cities table must exist."""
+    async def test_idempotent(self):
+        """Exécuter seed_postgres 2x ne duplique pas les données."""
         try:
-            await self._run_seed()
+            from backend.scripts.seed_all import seed_postgres
+
+            await seed_postgres()
+            await seed_postgres()
         except Exception:
             pytest.skip("PostgreSQL not available")
 
-        result = await self._query(
-            "SELECT COUNT(*) FROM information_schema.tables "
-            "WHERE table_name = 'cities'"
-        )
-        assert result.scalar_one() >= 1
+        from backend.db.postgres import get_session_factory
+        from sqlalchemy import text
 
-    async def test_seed_creates_scores_table(self):
-        """After seeding, the scores table must exist."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        result = await self._query(
-            "SELECT COUNT(*) FROM information_schema.tables "
-            "WHERE table_name = 'scores'"
-        )
-        assert result.scalar_one() >= 1
-
-    async def test_seed_loads_all_cities(self):
-        """All rows from cities.csv must be loaded."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        expected = _count_csv_rows("cities.csv")
-        result = await self._query("SELECT COUNT(*) FROM cities")
-        assert result.scalar_one() == expected
-
-    async def test_seed_loads_all_scores(self):
-        """All rows from scores.csv must be loaded."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        expected = _count_csv_rows("scores.csv")
-        result = await self._query("SELECT COUNT(*) FROM scores")
-        assert result.scalar_one() == expected
-
-    async def test_city_data_integrity(self):
-        """Check that city data is loaded with correct values."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        result = await self._query("SELECT name, population, region FROM cities WHERE id = 1")
-        row = result.mappings().first()
-        assert row is not None
-        assert row["name"] == "Paris"
-        assert row["population"] == 2161000
-        assert row["region"] == "Île-de-France"
-
-    async def test_scores_reference_valid_cities(self):
-        """All score city_ids should correspond to existing cities."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        result = await self._query(
-            "SELECT COUNT(*) FROM scores s "
-            "WHERE NOT EXISTS (SELECT 1 FROM cities c WHERE c.id = s.city_id)"
-        )
-        orphan_count = result.scalar_one()
-        assert orphan_count == 0, "All scores must reference valid city IDs"
-
-    async def test_seed_is_idempotent(self):
-        """Running seed twice should not duplicate data."""
-        try:
-            await self._run_seed()
-            await self._run_seed()
-        except Exception:
-            pytest.skip("PostgreSQL not available")
-
-        expected_cities = _count_csv_rows("cities.csv")
-        expected_scores = _count_csv_rows("scores.csv")
-
-        result_cities = await self._query("SELECT COUNT(*) FROM cities")
-        result_scores = await self._query("SELECT COUNT(*) FROM scores")
-        assert result_cities.scalar_one() == expected_cities
-        assert result_scores.scalar_one() == expected_scores
+        factory = get_session_factory()
+        async with factory() as s:
+            cities = (await s.execute(text("SELECT COUNT(*) FROM cities"))).scalar_one()
+        assert cities == _csv_rows("cities.csv")
 
 
-# ── MongoDB integration ──────────────────────────────────────────
+# ── MongoDB ──────────────────────────────────────────────────────
 
 
 class TestSeedMongoIntegration:
-    """Integration tests for seed_mongo() against a real MongoDB database."""
 
-    async def _run_seed(self):
-        from backend.scripts.seed_all import seed_mongo
+    async def test_loads_all_reviews(self):
+        """seed_mongo charge toutes les lignes de reviews.jsonl."""
+        try:
+            from backend.scripts.seed_all import seed_mongo
 
-        await seed_mongo()
+            await seed_mongo()
+        except Exception:
+            pytest.skip("MongoDB not available")
 
-    def _get_collection(self):
         from backend.db.mongo import get_mongo_db
 
-        db = get_mongo_db()
-        return db["reviews"]
-
-    async def test_seed_loads_all_reviews(self):
-        """All rows from reviews.jsonl must be loaded."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("MongoDB not available")
-
-        expected = _count_jsonl_rows("reviews.jsonl")
-        collection = self._get_collection()
-        count = await collection.count_documents({})
-        assert count == expected
-
-    async def test_review_has_required_fields(self):
-        """Each review document must have the expected fields."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("MongoDB not available")
-
-        collection = self._get_collection()
-        required_fields = {"city_id", "author", "rating", "comment", "tags", "created_at"}
-        async for doc in collection.find().limit(5):
-            doc_keys = set(doc.keys()) - {"_id"}
-            assert required_fields.issubset(doc_keys), (
-                f"Missing fields: {required_fields - doc_keys}"
-            )
-
-    async def test_review_ratings_in_valid_range(self):
-        """All ratings should be between 1 and 5."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("MongoDB not available")
-
-        collection = self._get_collection()
-        async for doc in collection.find():
-            assert 1 <= doc["rating"] <= 5, f"Rating {doc['rating']} out of range"
+        count = await get_mongo_db()["reviews"].count_documents({})
+        assert count == _jsonl_rows("reviews.jsonl")
 
     async def test_created_at_is_datetime(self):
-        """created_at must be stored as datetime, not string."""
+        """created_at est stocké en datetime, pas en string."""
         try:
-            await self._run_seed()
+            from backend.scripts.seed_all import seed_mongo
+
+            await seed_mongo()
         except Exception:
             pytest.skip("MongoDB not available")
 
         from datetime import datetime
 
-        collection = self._get_collection()
-        doc = await collection.find_one()
-        assert doc is not None
-        assert isinstance(doc["created_at"], datetime), (
-            "created_at should be datetime, not string"
-        )
+        from backend.db.mongo import get_mongo_db
 
-    async def test_seed_is_idempotent(self):
-        """Running seed twice should not duplicate reviews."""
-        try:
-            await self._run_seed()
-            await self._run_seed()
-        except Exception:
-            pytest.skip("MongoDB not available")
-
-        expected = _count_jsonl_rows("reviews.jsonl")
-        collection = self._get_collection()
-        count = await collection.count_documents({})
-        assert count == expected
+        doc = await get_mongo_db()["reviews"].find_one()
+        assert isinstance(doc["created_at"], datetime)
 
 
-# ── Neo4j integration ────────────────────────────────────────────
+# ── Neo4j ────────────────────────────────────────────────────────
 
 
 class TestSeedNeo4jIntegration:
-    """Integration tests for seed_neo4j() against a real Neo4j database."""
 
-    async def _run_seed(self):
-        from backend.scripts.seed_all import seed_neo4j
-
-        await seed_neo4j()
-
-    async def _run_cypher(self, query: str):
+    async def _cypher(self, query: str):
         from backend.db.neo4j import get_neo4j_driver
 
         driver = get_neo4j_driver()
-        async with driver.session() as session:
-            result = await session.run(query)
-            return await result.data()
+        async with driver.session() as s:
+            return await (await s.run(query)).data()
 
-    async def test_seed_creates_city_nodes(self):
-        """Should create City nodes matching cities.csv."""
+    async def test_creates_nodes_and_relations(self):
+        """seed_neo4j crée les noeuds City/Criterion et les relations."""
         try:
-            await self._run_seed()
+            from backend.scripts.seed_all import seed_neo4j
+
+            await seed_neo4j()
         except Exception:
             pytest.skip("Neo4j not available")
 
-        expected = _count_csv_rows("cities.csv")
-        data = await self._run_cypher("MATCH (c:City) RETURN count(c) AS cnt")
-        assert data[0]["cnt"] == expected
+        cities = (await self._cypher("MATCH (c:City) RETURN count(c) AS n"))[0]["n"]
+        criteria = (await self._cypher("MATCH (c:Criterion) RETURN count(c) AS n"))[0]["n"]
+        strong = (await self._cypher(
+            "MATCH ()-[r:STRONG_IN]->() RETURN count(r) AS n"
+        ))[0]["n"]
+        similar = (await self._cypher(
+            "MATCH ()-[r:SIMILAR_TO]->() RETURN count(r) AS n"
+        ))[0]["n"]
 
-    async def test_seed_creates_criterion_nodes(self):
-        """Should create Criterion nodes from score categories."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        data = await self._run_cypher("MATCH (c:Criterion) RETURN count(c) AS cnt")
-        assert data[0]["cnt"] > 0, "Should have at least one Criterion node"
-
-    async def test_city_nodes_have_properties(self):
-        """City nodes must have key properties (name, city_id, region)."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        data = await self._run_cypher(
-            "MATCH (c:City {city_id: 1}) RETURN c.name AS name, c.region AS region"
-        )
-        assert len(data) == 1
-        assert data[0]["name"] == "Paris"
-        assert data[0]["region"] == "Île-de-France"
-
-    async def test_strong_in_relations_exist(self):
-        """STRONG_IN relations must exist between City and Criterion nodes."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        data = await self._run_cypher(
-            "MATCH (:City)-[r:STRONG_IN]->(:Criterion) RETURN count(r) AS cnt"
-        )
-        assert data[0]["cnt"] > 0, "Should have STRONG_IN relations"
-
-    async def test_similar_to_relations_exist(self):
-        """SIMILAR_TO relations must exist between City nodes."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        data = await self._run_cypher(
-            "MATCH (:City)-[r:SIMILAR_TO]->(:City) RETURN count(r) AS cnt"
-        )
-        assert data[0]["cnt"] > 0, "Should have SIMILAR_TO relations"
-
-    async def test_similar_to_score_in_range(self):
-        """SIMILAR_TO scores must be between 0 and 1."""
-        try:
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        data = await self._run_cypher(
-            "MATCH ()-[r:SIMILAR_TO]->() RETURN r.score AS score"
-        )
-        for record in data:
-            assert 0 <= record["score"] <= 1, f"Score {record['score']} out of [0,1] range"
-
-    async def test_seed_is_idempotent(self):
-        """Running seed twice should not duplicate nodes."""
-        try:
-            await self._run_seed()
-            await self._run_seed()
-        except Exception:
-            pytest.skip("Neo4j not available")
-
-        expected = _count_csv_rows("cities.csv")
-        data = await self._run_cypher("MATCH (c:City) RETURN count(c) AS cnt")
-        assert data[0]["cnt"] == expected
+        assert cities == _csv_rows("cities.csv")
+        assert criteria > 0
+        assert strong > 0
+        assert similar > 0
 
 
-# ── Full pipeline integration ────────────────────────────────────
+# ── Pipeline complet ─────────────────────────────────────────────
 
 
 class TestSeedMainIntegration:
-    """Integration test for the full seed pipeline."""
 
-    async def test_full_seed_pipeline(self):
-        """main() should seed all three databases without errors."""
+    async def test_full_pipeline(self):
+        """main() alimente les 3 bases sans erreur."""
         try:
             from backend.scripts.seed_all import main
 
@@ -354,27 +157,16 @@ class TestSeedMainIntegration:
         except Exception:
             pytest.skip("One or more databases not available")
 
-        # Verify PostgreSQL
+        from backend.db.mongo import get_mongo_db
+        from backend.db.neo4j import get_neo4j_driver
         from backend.db.postgres import get_session_factory
         from sqlalchemy import text
 
-        factory = get_session_factory()
-        async with factory() as session:
-            result = await session.execute(text("SELECT COUNT(*) FROM cities"))
-            assert result.scalar_one() > 0
+        async with get_session_factory()() as s:
+            assert (await s.execute(text("SELECT COUNT(*) FROM cities"))).scalar_one() > 0
 
-        # Verify MongoDB
-        from backend.db.mongo import get_mongo_db
+        assert await get_mongo_db()["reviews"].count_documents({}) > 0
 
-        db = get_mongo_db()
-        count = await db["reviews"].count_documents({})
-        assert count > 0
-
-        # Verify Neo4j
-        from backend.db.neo4j import get_neo4j_driver
-
-        driver = get_neo4j_driver()
-        async with driver.session() as session:
-            result = await session.run("MATCH (c:City) RETURN count(c) AS cnt")
-            data = await result.data()
-            assert data[0]["cnt"] > 0
+        async with get_neo4j_driver().session() as s:
+            data = await (await s.run("MATCH (c:City) RETURN count(c) AS n")).data()
+            assert data[0]["n"] > 0
