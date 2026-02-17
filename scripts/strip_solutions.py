@@ -30,6 +30,8 @@ MARKER_END = "# ✂️ SOLUTION END"
 
 # Fichiers à scanner (relatifs à la racine du projet)
 TARGET_DIRS = [
+    "packages/backend/src/backend/db",
+    "packages/backend/src/backend/scripts",
     "packages/backend/src/backend/repositories",
     "packages/backend/src/backend/services",
 ]

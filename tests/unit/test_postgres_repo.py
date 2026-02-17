@@ -1,9 +1,9 @@
-"""Tests unitaires — TP1 : Repository PostgreSQL.
+"""Tests unitaires — Repository PostgreSQL.
 
-Jour 1 Matin — Implémenter l'accès aux données PostgreSQL.
+Implémenter l'accès aux données PostgreSQL.
 
 Commande :
-    uv run pytest tests/unit/test_tp1_postgres_repo.py -v
+    uv run pytest tests/unit/test_postgres_repo.py -v
 
 Fichier à implémenter :
     packages/backend/src/backend/repositories/postgres_repo.py
@@ -16,9 +16,13 @@ Méthodes à implémenter :
 
 from __future__ import annotations
 
+import pytest
+
 from backend.repositories.postgres_repo import PostgresRepository
 
 from .conftest import FakeResult
+
+pytestmark = pytest.mark.sprint3
 
 
 # ── get_city_by_id ──────────────────────────────────────────────

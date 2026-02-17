@@ -1,16 +1,9 @@
-"""Tests unitaires — TP3 : Service Reviews.
+"""Tests unitaires — Service Reviews.
 
-Jour 2 Matin (partie 2) — Implémenter l'orchestration des avis.
+Le service est fourni ; ces tests vérifient le comportement (repos mockés).
 
 Commande :
-    uv run pytest tests/unit/test_tp3_review_service.py -v
-
-Fichier à implémenter :
-    packages/backend/src/backend/services/review_service.py
-
-Méthodes à implémenter :
-    1. get_reviews(city_id, page, page_size) -> ReviewsResponse
-    2. create_review(city_id, review) -> Review
+    uv run pytest tests/unit/test_review_service.py -v
 """
 
 from __future__ import annotations
@@ -22,6 +15,8 @@ import pytest
 
 from backend.models import Review, ReviewCreate, ReviewsResponse
 from backend.services.review_service import ReviewService
+
+pytestmark = pytest.mark.sprint4
 
 
 @pytest.fixture

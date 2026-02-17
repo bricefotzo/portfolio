@@ -30,12 +30,13 @@ class RecommendationService:
         3. Pour chaque résultat, enrichir avec les infos Postgres si besoin
         4. Construire et retourner un RecommendationsResponse
         """
-        # ✂️ SOLUTION START
         source = await self.postgres_repo.get_city_by_id(city_id)
         if source is None:
             return None
-
+        # TODO: Appeler neo4j_repo.get_similar_cities(city_id, k)
+        # ✂️ SOLUTION START     
         neo4j_results = await self.neo4j_repo.get_similar_cities(city_id, k=k)
+        # ✂️ SOLUTION END 
 
         items = []
         for rec in neo4j_results:
@@ -66,4 +67,3 @@ class RecommendationService:
             source_city=source["name"],
             recommendations=items,
         )
-        # ✂️ SOLUTION END

@@ -1,9 +1,9 @@
-"""Tests unitaires — TP4 : Repository Neo4j.
+"""Tests unitaires — Repository Neo4j.
 
-Jour 2 Après-midi (partie 1) — Implémenter les requêtes Cypher.
+Implémenter les requêtes Cypher.
 
 Commande :
-    uv run pytest tests/unit/test_tp4_neo4j_repo.py -v
+    uv run pytest tests/unit/test_neo4j_repo.py -v
 
 Fichier à implémenter :
     packages/backend/src/backend/repositories/neo4j_repo.py
@@ -20,6 +20,8 @@ import pytest
 from backend.repositories.neo4j_repo import Neo4jRepository
 
 from .conftest import FakeNeo4jResult
+
+pytestmark = pytest.mark.sprint3
 
 
 # ── get_similar_cities ──────────────────────────────────────────

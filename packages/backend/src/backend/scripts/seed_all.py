@@ -2,11 +2,10 @@
 
 Usage: python -m backend.scripts.seed_all
 
-TODO (optionnel — étudiants ou fourni) :
-1. Lire datasets/cities.csv et insérer dans PostgreSQL
-2. Lire datasets/scores.csv et insérer dans PostgreSQL
-3. Lire datasets/reviews.jsonl et insérer dans MongoDB
-4. Créer les nœuds et relations dans Neo4j
+TODO (à compléter après les connexions DB) :
+1. seed_postgres : charger cities.csv et scores.csv dans PostgreSQL (tables, INSERT)
+2. seed_mongo : charger reviews.jsonl dans la collection MongoDB reviews
+3. seed_neo4j : créer le graphe (nœuds City, Criterion, relations STRONG_IN, SIMILAR_TO)
 """
 
 from __future__ import annotations
@@ -28,6 +27,7 @@ DATASETS_DIR = Path(__file__).resolve().parents[5] / "datasets"
 
 async def seed_postgres():
     """Charge cities.csv et scores.csv dans PostgreSQL."""
+    # TODO: Utiliser get_session_factory(), créer tables cities/scores, charger cities.csv et scores.csv
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'cities.csv'}")
     # ✂️ SOLUTION START
     factory = get_session_factory()
@@ -104,12 +104,13 @@ async def seed_postgres():
                     },
                 )
         await session.commit()
-    print("[seed] PostgreSQL — OK")
     # ✂️ SOLUTION END
+    print("[seed] PostgreSQL — OK")
 
 
 async def seed_mongo():
     """Charge reviews.jsonl dans MongoDB."""
+    # TODO: Utiliser get_mongo_db(), collection reviews : delete_many puis charger reviews.jsonl (insert_many)
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'reviews.jsonl'}")
     # ✂️ SOLUTION START
     db = get_mongo_db()
@@ -117,6 +118,7 @@ async def seed_mongo():
     await collection.delete_many({})
 
     reviews_path = DATASETS_DIR / "reviews.jsonl"
+    docs = []
     with open(reviews_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -127,16 +129,18 @@ async def seed_mongo():
                 doc["created_at"] = datetime.fromisoformat(doc["created_at"].replace("Z", "+00:00"))
             elif doc.get("created_at") is None:
                 doc["created_at"] = datetime.now(timezone.utc)
-            await collection.insert_one(doc)
-    print("[seed] MongoDB — OK")
+            docs.append(doc)
+    if docs:
+        await collection.insert_many(docs)
     # ✂️ SOLUTION END
+    print("[seed] MongoDB — OK")
 
 
 async def seed_neo4j():
     """Crée le graphe de villes, critères et relations dans Neo4j."""
-    # ✂️ SOLUTION START
+    # TODO: Utiliser get_neo4j_driver(), créer nœuds Criterion/City, relations STRONG_IN et SIMILAR_TO
     driver = get_neo4j_driver()
-
+    # ✂️ SOLUTION START
     async with driver.session() as session:
         # Nettoyer le graphe (optionnel : supprimer nos nœuds)
         await session.run("MATCH (n) DETACH DELETE n")
@@ -198,8 +202,8 @@ async def seed_neo4j():
             CREATE (a)-[:SIMILAR_TO {score: simScore}]->(b)
             CREATE (b)-[:SIMILAR_TO {score: simScore}]->(a)
         """)
-    print("[seed] Neo4j — OK")
     # ✂️ SOLUTION END
+    print("[seed] Neo4j — OK")
 
 
 async def main():

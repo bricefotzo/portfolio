@@ -1,17 +1,9 @@
-"""Tests unitaires — TP2 : Service City.
+"""Tests unitaires — Service City.
 
-Jour 1 Après-midi — Implémenter la logique d'orchestration Cities.
+Le service est fourni ; ces tests vérifient le comportement (repos mockés).
 
 Commande :
-    uv run pytest tests/unit/test_tp2_city_service.py -v
-
-Fichier à implémenter :
-    packages/backend/src/backend/services/city_service.py
-
-Méthodes à implémenter :
-    1. search_cities(**params) -> CityListResponse
-    2. get_city_detail(city_id) -> CityDetail | None
-    3. get_city_scores(city_id) -> CityScores | None
+    uv run pytest tests/unit/test_city_service.py -v
 """
 
 from __future__ import annotations
@@ -22,6 +14,8 @@ import pytest
 
 from backend.models import CityDetail, CityListResponse, CityScores
 from backend.services.city_service import CityService
+
+pytestmark = pytest.mark.sprint4
 
 
 @pytest.fixture

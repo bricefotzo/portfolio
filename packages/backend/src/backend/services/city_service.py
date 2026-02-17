@@ -32,6 +32,7 @@ class CityService:
 
         TODO: Appeler self.repo.get_cities(...) et convertir en CityListResponse.
         """
+        # TODO: Appeler self.repo.get_cities(...) et convertir en CityListResponse.
         # ✂️ SOLUTION START
         rows, total = await self.repo.get_cities(
             search=search,
@@ -43,9 +44,9 @@ class CityService:
             page=page,
             page_size=page_size,
         )
+        # ✂️ SOLUTION END
         cities = [City(**row) for row in rows]
         return CityListResponse(cities=cities, total=total, page=page, page_size=page_size)
-        # ✂️ SOLUTION END
 
     async def get_city_detail(self, city_id: int) -> Optional[CityDetail]:
         """Détails complets d'une ville (infos + scores).
@@ -55,7 +56,6 @@ class CityService:
         2. Appeler self.repo.get_city_scores(city_id)
         3. Combiner dans un CityDetail
         """
-        # ✂️ SOLUTION START
         row = await self.repo.get_city_by_id(city_id)
         if row is None:
             return None
@@ -64,14 +64,12 @@ class CityService:
         scores = [ScoreCategory(**s) for s in score_rows]
 
         return CityDetail(**row, scores=scores)
-        # ✂️ SOLUTION END
 
     async def get_city_scores(self, city_id: int) -> Optional[CityScores]:
         """Scores d'une ville.
 
         TODO: Appeler self.repo.get_city_scores(city_id) et convertir en CityScores.
         """
-        # ✂️ SOLUTION START
         row = await self.repo.get_city_by_id(city_id)
         if row is None:
             return None
@@ -81,4 +79,3 @@ class CityService:
 
         overall = row.get("overall_score", 0.0)
         return CityScores(city_id=city_id, scores=scores, overall=overall)
-        # ✂️ SOLUTION END

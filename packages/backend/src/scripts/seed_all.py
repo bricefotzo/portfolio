@@ -25,40 +25,60 @@ from backend.db.neo4j import get_neo4j_driver
 
 DATASETS_DIR = Path(__file__).resolve().parents[5] / "datasets"
 
+# ✂️ SOLUTION START
+CREATE_TABLES_QUERY = """
+    CREATE TABLE IF NOT EXISTS cities (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        department TEXT,
+        region TEXT,
+        population INTEGER DEFAULT 0,
+        description TEXT,
+        latitude DOUBLE PRECISION,
+        longitude DOUBLE PRECISION,
+        overall_score DOUBLE PRECISION DEFAULT 0
+    )
+"""
 
+CREATE_SCORES_TABLE_QUERY = """
+    CREATE TABLE IF NOT EXISTS scores (
+        city_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        label TEXT,
+        score DOUBLE PRECISION NOT NULL
+    )
+"""
+
+DELETE_TABLES_QUERY = """
+    DELETE FROM scores
+    DELETE FROM cities
+"""
+
+INSERT_CITIES_QUERY = """
+    INSERT INTO cities (id, name, department, region, population, description, latitude, longitude, overall_score)
+    VALUES (:id, :name, :department, :region, :population, :description, :latitude, :longitude, :overall_score)
+"""
+
+INSERT_SCORES_QUERY = """
+    INSERT INTO scores (city_id, category, label, score)
+    VALUES (:city_id, :category, :label, :score)
+"""
+
+# ✂️ SOLUTION END
+    
 async def seed_postgres():
     """Charge cities.csv et scores.csv dans PostgreSQL."""
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'cities.csv'}")
-    # ✂️ SOLUTION START
+    
     factory = get_session_factory()
     async with factory() as session:
         # Créer les tables si nécessaire
-        await session.execute(text("""
-            CREATE TABLE IF NOT EXISTS cities (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                department TEXT,
-                region TEXT,
-                population INTEGER DEFAULT 0,
-                description TEXT,
-                latitude DOUBLE PRECISION,
-                longitude DOUBLE PRECISION,
-                overall_score DOUBLE PRECISION DEFAULT 0
-            )
-        """))
-        await session.execute(text("""
-            CREATE TABLE IF NOT EXISTS scores (
-                city_id INTEGER NOT NULL,
-                category TEXT NOT NULL,
-                label TEXT,
-                score DOUBLE PRECISION NOT NULL
-            )
-        """))
+        await session.execute(text(CREATE_TABLES_QUERY))
+        await session.execute(text(CREATE_SCORES_TABLE_QUERY))
         await session.commit()
 
         # Vidage puis chargement cities
-        await session.execute(text("DELETE FROM scores"))
-        await session.execute(text("DELETE FROM cities"))
+        await session.execute(text(DELETE_TABLES_QUERY))
         await session.commit()
 
         cities_path = DATASETS_DIR / "cities.csv"
@@ -69,10 +89,7 @@ async def seed_postgres():
                 lon = row.get("longitude")
                 osc = row.get("overall_score")
                 await session.execute(
-                    text("""
-                        INSERT INTO cities (id, name, department, region, population, description, latitude, longitude, overall_score)
-                        VALUES (:id, :name, :department, :region, :population, :description, :latitude, :longitude, :overall_score)
-                    """),
+                    text(INSERT_CITIES_QUERY),
                     {
                         "id": int(row["id"]),
                         "name": row["name"],
@@ -92,10 +109,7 @@ async def seed_postgres():
             reader = csv.DictReader(f)
             for row in reader:
                 await session.execute(
-                    text("""
-                        INSERT INTO scores (city_id, category, label, score)
-                        VALUES (:city_id, :category, :label, :score)
-                    """),
+                    text(INSERT_SCORES_QUERY),
                     {
                         "city_id": int(row["city_id"]),
                         "category": row["category"],
@@ -111,12 +125,17 @@ async def seed_postgres():
 async def seed_mongo():
     """Charge reviews.jsonl dans MongoDB."""
     print(f"[seed] Chargement depuis {DATASETS_DIR / 'reviews.jsonl'}")
-    # ✂️ SOLUTION START
+  
     db = get_mongo_db()
+    
+    # TODO: Vidage des avis dans la collection reviews
+    # ✂️ SOLUTION START
     collection = db["reviews"]
     await collection.delete_many({})
+    # ✂️ SOLUTION END
 
     reviews_path = DATASETS_DIR / "reviews.jsonl"
+    docs = []
     with open(reviews_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -127,25 +146,30 @@ async def seed_mongo():
                 doc["created_at"] = datetime.fromisoformat(doc["created_at"].replace("Z", "+00:00"))
             elif doc.get("created_at") is None:
                 doc["created_at"] = datetime.now(timezone.utc)
-            await collection.insert_one(doc)
-    print("[seed] MongoDB — OK")
+            docs.append(doc)
+
+    # TODO: Insertion des avis dans la collection reviews 
+    # ✂️ SOLUTION START
+    if docs:
+        await collection.insert_many(docs)
     # ✂️ SOLUTION END
+    print("[seed] MongoDB — OK")
+   
 
 
 async def seed_neo4j():
     """Crée le graphe de villes, critères et relations dans Neo4j."""
-    # ✂️ SOLUTION START
+    
     driver = get_neo4j_driver()
 
     async with driver.session() as session:
-        # Nettoyer le graphe (optionnel : supprimer nos nœuds)
+        # TODO: Nettoyer le graphe (optionnel : supprimer nos nœuds)
+        # ✂️ SOLUTION START
         await session.run("MATCH (n) DETACH DELETE n")
+        # ✂️ SOLUTION END
 
         # 1) Créer les nœuds Criterion à partir des catégories distinctes des scores
-        categories_query = """
-        UNWIND $categories AS cat
-        MERGE (c:Criterion {name: cat})
-        """
+  
         # Lire les catégories depuis scores.csv
         categories = set()
         scores_path = DATASETS_DIR / "scores.csv"
@@ -153,7 +177,15 @@ async def seed_neo4j():
             reader = csv.DictReader(f)
             for row in reader:
                 categories.add(row.get("label") or row["category"])
+        
+        # TODO: Créer les nœuds Criterion à partir des catégories distinctes des scores
+        # ✂️ SOLUTION START
+        categories_query = """
+        UNWIND $categories AS cat
+        MERGE (c:Criterion {name: cat})
+        """
         await session.run(categories_query, categories=list(categories))
+        # ✂️ SOLUTION END
 
         # 2) Créer les nœuds City depuis cities.csv
         cities_path = DATASETS_DIR / "cities.csv"
@@ -170,11 +202,14 @@ async def seed_neo4j():
                     "overall_score": float(row.get("overall_score") or 0),
                 })
         for city in cities_rows:
+            # TODO: Créer les nœuds City à partir des villes de cities.csv
+            # ✂️ SOLUTION START
             await session.run("""
                 MERGE (c:City {city_id: $city_id})
                 SET c.name = $name, c.department = $department, c.region = $region,
                     c.population = $population, c.overall_score = $overall_score
             """, **city)
+            # ✂️ SOLUTION END
 
         # 3) STRONG_IN : ville -> critère quand score >= 7
         scores_path = DATASETS_DIR / "scores.csv"

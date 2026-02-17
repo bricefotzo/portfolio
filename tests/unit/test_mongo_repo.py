@@ -1,9 +1,9 @@
-"""Tests unitaires — TP3 : Repository MongoDB.
+"""Tests unitaires — Repository MongoDB.
 
-Jour 2 Matin (partie 1) — Implémenter l'accès aux avis MongoDB.
+Implémenter l'accès aux avis MongoDB.
 
 Commande :
-    uv run pytest tests/unit/test_tp3_mongo_repo.py -v
+    uv run pytest tests/unit/test_mongo_repo.py -v
 
 Fichier à implémenter :
     packages/backend/src/backend/repositories/mongo_repo.py
@@ -24,6 +24,8 @@ import pytest
 from backend.repositories.mongo_repo import MongoRepository
 
 from .conftest import FakeAggregationCursor, FakeCursor, FakeInsertResult
+
+pytestmark = pytest.mark.sprint3
 
 
 @pytest.fixture

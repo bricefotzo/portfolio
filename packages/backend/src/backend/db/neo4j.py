@@ -10,14 +10,17 @@ _driver: AsyncDriver | None = None
 
 
 def get_neo4j_driver() -> AsyncDriver:
-    """Retourne le driver Neo4j (singleton)."""
+    """Retourne le driver Neo4j (singleton). À compléter : créer le driver avec AsyncGraphDatabase.driver(uri, auth=(user, password))."""
     global _driver
     if _driver is None:
+        # TODO: Créer le driver avec AsyncGraphDatabase.driver(settings.neo4j_uri, auth=(user, password))
+        # ✂️ SOLUTION START
         settings = get_settings()
         _driver = AsyncGraphDatabase.driver(
             settings.neo4j_uri,
             auth=(settings.neo4j_user, settings.neo4j_password),
         )
+        # ✂️ SOLUTION END
     return _driver
 
 

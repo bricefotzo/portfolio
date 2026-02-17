@@ -1,15 +1,9 @@
-"""Tests unitaires — TP4 : Service Recommendations.
+"""Tests unitaires — Service Recommendations.
 
-Jour 2 Après-midi (partie 2) — Implémenter l'orchestration multi-repo.
+Le service est fourni ; ces tests vérifient le comportement (repos mockés).
 
 Commande :
-    uv run pytest tests/unit/test_tp4_reco_service.py -v
-
-Fichier à implémenter :
-    packages/backend/src/backend/services/recommendation_service.py
-
-Méthode à implémenter :
-    1. get_recommendations(city_id, k) -> RecommendationsResponse | None
+    uv run pytest tests/unit/test_reco_service.py -v
 """
 
 from __future__ import annotations
@@ -20,6 +14,8 @@ import pytest
 
 from backend.models import RecommendationsResponse
 from backend.services.recommendation_service import RecommendationService
+
+pytestmark = pytest.mark.sprint4
 
 
 @pytest.fixture

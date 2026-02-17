@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.sprint5
+
 ACCEPT = (200, 500, 501)
 
 
